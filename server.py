@@ -109,13 +109,25 @@ class VisaClient:
                 allow_redirects=True,
             )
             # Login ok se não voltou para sign_in
-            if "sign_in" in r2.url and "signed_in" not in r2.text:
+            if "sign_in" in r2.url:
+                # Tenta extrair mensagem de erro do portal
+                erro_portal = re.search(r"alert[^>]*>([^<]{10,120})<", r2.text)
+                if erro_portal:
+                    add_log(self.config.get("nome","?"), "❌ Portal: " + erro_portal.group(1).strip(), "erro")
+                else:
+                    add_log(self.config.get("nome","?"), "❌ Login recusado — e-mail/senha incorretos ou IP bloqueado pelo portal", "erro")
                 return False
             # Guarda CSRF da nova página
             self._csrf = self._get_csrf(r2.text)
             return True
+        except requests.exceptions.ProxyError as e:
+            add_log(self.config.get("nome", "?"), "🚫 Erro de proxy: " + str(e)[:100], "erro")
+            return False
+        except requests.exceptions.ConnectionError as e:
+            add_log(self.config.get("nome", "?"), "🚫 Sem conexão: " + str(e)[:100], "erro")
+            return False
         except Exception as e:
-            add_log(self.config.get("nome", "?"), f"Erro no login: {e}", "erro")
+            add_log(self.config.get("nome", "?"), "Erro no login: " + str(e)[:100], "erro")
             return False
 
     def buscar_datas(self) -> list[str]:
