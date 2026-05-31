@@ -36,6 +36,27 @@ CONSULADOS = {
     "128": "Porto Alegre",
 }
 CASV_MAP = {"56": "60", "55": "58", "54": "57", "57": "61", "128": "129"}
+PROXY_LIST = [
+   "38.154.203.95:5863:ulehnrpt:zyeyi40is57f",
+   "198.105.121.200:6462:ulehnrpt:zyeyi40is57f",
+   "64.137.96.74:6641:ulehnrpt:zyeyi40is57f",
+   "209.127.138.10:5784:ulehnrpt:zyeyi40is57f",
+   "38.154.185.97:6370:ulehnrpt:zyeyi40is57f",
+   "84.247.60.125:6095:ulehnrpt:zyeyi40is57f",
+   "142.111.67.146:5611:ulehnrpt:zyeyi40is57f",
+   "191.96.254.138:6185:ulehnrpt:zyeyi40is57f",
+   "31.58.9.4:6077:ulehnrpt:zyeyi40is57f",
+   "104.239.107.47:5699:ulehnrpt:zyeyi40is57f",
+]
+_proxy_index=0
+import threading as _t; _proxy_lock=_t.Lock()
+def get_proxy():
+   global _proxy_index
+   if not PROXY_LIST: return None
+   with _proxy_lock:
+       s=PROXY_LIST[_proxy_index%len(PROXY_LIST)]; _proxy_index+=1
+   h,p,u,pw=s.split(":")
+   return {"http":f"http://{u}:{pw}@{h}:{p}","https":f"http://{u}:{pw}@{h}:{p}"}
 CONFIG_PATH = os.environ.get("CONFIG_PATH", os.path.join(os.path.expanduser("~"), ".visaflow_web_config.json"))
 
 # ── Estado global ────────────────────────────────────────────
