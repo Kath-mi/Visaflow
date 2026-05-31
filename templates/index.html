@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Visaflow">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="apple-touch-icon" href="/static/icon.svg">
+<title>Visaflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg:         #0a0e1a;
+  --bg2:        #0d1220;
+  --card:       #111827;
+  --card2:      #162033;
+  --border:     rgba(30,58,95,0.6);
+  --primary:    #2563eb;
+  --primary-glow: rgba(37,99,235,0.3);
+  --success:    #10b981;
+  --success-glow: rgba(16,185,129,0.25);
+  --error:      #ef4444;
+  --warning:    #f59e0b;
+  --purple:     #7c3aed;
+  --text:       #f1f5f9;
+  --text2:      #94a3b8;
+  --text3:      #475569;
+  --input-bg:   rgba(15,25,50,0.8);
+  --safe-top:   env(safe-area-inset-top, 44px);
+  --safe-bottom:env(safe-area-inset-bottom, 34px);
+}
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; -webkit-font-smoothing: antialiased; }
+
+/* ── App Shell ── */
+.app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
+
+/* ── Status Bar Spacer ── */
+.status-bar { height: var(--safe-top); background: rgba(10,14,26,0.95); flex-shrink: 0; }
+
+/* ── Navigation Bar ── */
+.navbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px 8px;
+  background: rgba(10,14,26,0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+}
+.navbar-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+.navbar-subtitle { font-size: 10px; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px; }
+.navbar-left, .navbar-right { display: flex; gap: 8px; }
+
+/* ── Icon Buttons ── */
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; transition: all .15s;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+.icon-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.12); }
+.icon-btn.primary { background: var(--primary); }
+
+/* ── Scrollable Content ── */
+.content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.content-inner { padding: 16px 16px 0; }
+
+/* ── Tab Bar ── */
+.tab-bar {
+  display: flex; background: rgba(10,14,26,0.95);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 0.5px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 8px 0 4px; gap: 3px; cursor: pointer; transition: all .15s;
+  color: var(--text3); border: none; background: none;
+}
+.tab-item.active { color: var(--primary); }
+.tab-item:active { opacity: .7; }
+.tab-icon { font-size: 22px; line-height: 1; }
+.tab-label { font-size: 10px; font-weight: 500; letter-spacing: 0.2px; }
+
+/* ── Pages ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Global Action Row ── */
+.action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+/* ── Pill Buttons ── */
+.pill {
+  border: none; border-radius: 14px; padding: 14px; font-size: 13px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .15s; letter-spacing: -0.1px;
+}
+.pill:active { transform: scale(0.97); }
+.pill-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 20px var(--primary-glow); }
+.pill-danger  { background: var(--error);   color: #fff; }
+.pill-ghost   { background: var(--card2);   color: var(--text2); border: 0.5px solid var(--border); }
+.pill-success { background: var(--success); color: #fff; box-shadow: 0 4px 20px var(--success-glow); }
+.pill-purple  { background: var(--purple);  color: #fff; }
+.pill:disabled { opacity: .35; }
+
+/* ── Account Cards ── */
+.account-card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: transform .1s;
+}
+.account-card:active { transform: scale(0.99); }
+
+.card-head {
+  padding: 14px 16px 10px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  border-bottom: 0.5px solid var(--border);
+  background: linear-gradient(135deg, #0f2544 0%, #111827 100%);
+}
+.card-name { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+.card-meta { font-size: 11px; color: var(--text2); line-height: 1.6; }
+
+.status-pill {
+  font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+  white-space: nowrap; letter-spacing: 0.3px;
+}
+.sp-parado    { background: rgba(71,85,105,0.2);  color: var(--text3); }
+.sp-rodando   { background: rgba(37,99,235,0.2);  color: #60a5fa; }
+.sp-sucesso   { background: rgba(16,185,129,0.2); color: var(--success); }
+.sp-erro      { background: rgba(239,68,68,0.2);  color: var(--error); }
+.sp-aguardando{ background: rgba(245,158,11,0.2); color: var(--warning); }
+
+.card-body { padding: 12px 14px; }
+.card-log { font-size: 11px; color: var(--text2); min-height: 16px; margin-bottom: 12px; line-height: 1.4; font-family: 'SF Mono', 'Courier New', monospace; }
+
+.card-btns-main { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.card-btns-sub  { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-small { padding: 10px; font-size: 12px; border-radius: 12px; }
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center; padding: 60px 24px; color: var(--text2);
+}
+.empty-icon { font-size: 56px; margin-bottom: 16px; opacity: .5; }
+.empty-title { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.empty-desc  { font-size: 14px; line-height: 1.6; }
+
+/* ── Log Page ── */
+.log-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.log-toolbar h2 { font-size: 15px; font-weight: 600; }
+#log-container {
+  background: #060a12; border-radius: 16px; padding: 12px;
+  height: calc(100dvh - 220px); overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-family: 'SF Mono', 'Courier New', monospace; font-size: 11px;
+  border: 0.5px solid var(--border);
+}
+.log-entry { display: flex; gap: 6px; padding: 2px 0; line-height: 1.6; }
+.log-ts   { color: var(--text3); flex-shrink: 0; }
+.log-name { color: #60a5fa; font-weight: 700; flex-shrink: 0; }
+.log-msg  { flex: 1; word-break: break-word; }
+.log-info    .log-msg { color: var(--text); }
+.log-sucesso .log-msg { color: var(--success); }
+.log-erro    .log-msg { color: var(--error); }
+.log-aviso   .log-msg { color: var(--warning); }
+
+/* ── Sheet (bottom modal) ── */
+.sheet-overlay {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.sheet-overlay.open { display: flex; align-items: flex-end; }
+.sheet {
+  background: #131c2e; border-radius: 24px 24px 0 0;
+  width: 100%; max-height: 92dvh; overflow-y: auto;
+  padding: 0 0 var(--safe-bottom);
+  -webkit-overflow-scrolling: touch;
+  animation: slideUp .3s cubic-bezier(.32,0,.67,0);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.sheet-handle { width: 36px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px; margin: 12px auto 0; }
+.sheet-header { padding: 16px 20px 12px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.sheet-title { font-size: 17px; font-weight: 700; }
+.sheet-body { padding: 20px; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+
+/* ── Form Fields ── */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; letter-spacing: 0.2px; }
+.field input, .field select {
+  width: 100%; background: var(--input-bg); border: 0.5px solid var(--border);
+  border-radius: 12px; padding: 13px 14px; color: var(--text); font-size: 15px;
+  outline: none; -webkit-appearance: none; appearance: none;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus { border-color: var(--primary); }
+.field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.field select option { background: #131c2e; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.divider { height: 0.5px; background: var(--border); margin: 16px 0; }
+.section-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+
+/* ── Toggle Row ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 16px; }
+.toggle-label { font-size: 15px; font-weight: 500; }
+.ios-toggle { position: relative; width: 51px; height: 31px; flex-shrink: 0; }
+.ios-toggle input { display: none; }
+.ios-slider { position: absolute; inset: 0; background: #3a3a3c; border-radius: 31px; cursor: pointer; transition: background .25s; }
+.ios-toggle input:checked + .ios-slider { background: var(--success); }
+.ios-slider::after { content: ''; position: absolute; width: 27px; height: 27px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform .25s; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+.ios-toggle input:checked + .ios-slider::after { transform: translateX(20px); }
+
+/* ── Tip ── */
+.tip { font-size: 12px; color: var(--text2); background: rgba(37,99,235,0.08); border: 0.5px solid rgba(37,99,235,0.2); border-radius: 10px; padding: 10px 12px; line-height: 1.6; margin-top: 6px; }
+
+/* ── Notification Banner ── */
+.notif-banner {
+  position: fixed; top: calc(var(--safe-top) + 54px); left: 12px; right: 12px;
+  background: var(--card); border: 0.5px solid var(--border); border-radius: 16px;
+  padding: 14px 16px; z-index: 500; display: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: bannerIn .3s cubic-bezier(.32,0,.67,0);
+  display: flex; align-items: center; gap: 12px;
+}
+@keyframes bannerIn { from { transform: translateY(-20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+.notif-icon { font-size: 28px; flex-shrink: 0; }
+.notif-text { flex: 1; }
+.notif-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.notif-body  { font-size: 12px; color: var(--text2); }
+
+/* ── Pulse animation for active bots ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.pulsing { animation: pulse 2s infinite; }
+
+/* ── Scrollbar hidden ── */
+::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Status bar spacer -->
+  <div class="status-bar"></div>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div>
+      <div class="navbar-title">🛂 Visaflow</div>
+      <div class="navbar-subtitle" id="nav-subtitle">Carregando...</div>
+    </div>
+    <div class="navbar-right">
+      <button class="icon-btn" onclick="abrirEmail()" title="Email">📧</button>
+      <button class="icon-btn primary" onclick="abrirConta(null)" title="Adicionar conta">＋</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Page: Contas -->
+    <div id="page-contas" class="page active">
+      <div class="content-inner">
+        <div class="action-row" style="margin-top:4px;">
+          <button class="pill pill-primary" onclick="iniciarTodas()">▶ Iniciar todas</button>
+          <button class="pill pill-danger"  onclick="pararTodas()">⏹ Parar todas</button>
+        </div>
+        <div id="lista-contas"></div>
+      </div>
+    </div>
+
+    <!-- Page: Log -->
+    <div id="page-log" class="page">
+      <div class="content-inner">
+        <div class="log-toolbar">
+          <h2>Registro de atividade</h2>
+          <button class="pill pill-ghost" style="width:auto;padding:8px 14px;font-size:12px;" onclick="limparLog()">Limpar</button>
+        </div>
+        <div id="log-container"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-item active" onclick="mudarPagina('contas', this)">
+      <span class="tab-icon">👥</span>
+      <span class="tab-label">Contas</span>
+    </button>
+    <button class="tab-item" onclick="mudarPagina('log', this)">
+      <span class="tab-icon">📋</span>
+      <span class="tab-label">Log</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- Sheet: Nova/Editar Conta -->
+<div class="sheet-overlay" id="sheet-conta">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title" id="sheet-conta-titulo">Nova Conta</span>
+      <button class="icon-btn" onclick="fecharSheet('sheet-conta')" style="font-size:14px;">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="section-title">Identificação</div>
+      <div class="field"><label>Nome / apelido</label><input id="f-nome" type="text" placeholder="Ex: Giovanna"></div>
+
+      <div class="section-title">Acesso ao portal</div>
+      <div class="field"><label>E-mail</label><input id="f-email" type="email" placeholder="email@exemplo.com" autocomplete="email"></div>
+      <div class="field"><label>Senha</label><input id="f-senha" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+
+      <div class="section-title">IDs do agendamento</div>
+      <div class="row2">
+        <div class="field"><label>Schedule ID</label><input id="f-schedule" type="text" inputmode="numeric" placeholder="74144667"></div>
+        <div class="field"><label>Group ID</label><input id="f-group" type="text" inputmode="numeric" placeholder="51740900"></div>
+      </div>
+
+      <div class="section-title">Configurações</div>
+      <div class="field">
+        <label>Consulado</label>
+        <select id="f-consulado">
+          <option value="56">🏛 São Paulo</option>
+          <option value="55">🏛 Rio de Janeiro</option>
+          <option value="54">🏛 Brasília</option>
+          <option value="57">🏛 Recife</option>
+          <option value="128">🏛 Porto Alegre</option>
+        </select>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Data mínima</label><input id="f-dmin" type="date"></div>
+        <div class="field"><label>Data limite</label><input id="f-dlim" type="date"></div>
+      </div>
+      <div class="field"><label>Intervalo entre verificações (segundos)</label><input id="f-intervalo" type="number" value="120" min="60" inputmode="numeric"></div>
+
+      <div class="sheet-actions">
+        <button class="pill pill-ghost" onclick="fecharSheet('sheet-conta')">Cancelar</button>
+        <button class="pill pill-primary" onclick="salvarConta()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sheet: Email -->
+<div class="sheet-overlay" id="sheet-email">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Notificações</span>
+      <button class="icon-btn" onclick="fecharSheet('sheet-email')" style="font-size:14px;">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="toggle-row">
+        <span class="toggle-label">Ativar emails de notificação</span>
+        <label class="ios-toggle"><input type="checkbox" id="e-notif"><span class="ios-slider"></span></label>
+      </div>
+      <div class="field"><label>Gmail remetente</label><input id="e-smtp-user" type="email" placeholder="seu@gmail.com"></div>
+      <div class="field"><label>Senha de App (16 dígitos)</label><input id="e-smtp-pass" type="password" placeholder="Deixe em branco para manter"></div>
+      <div class="field"><label>Email destinatário</label><input id="e-dest" type="email" placeholder="destino@gmail.com"></div>
+      <div class="tip">💡 Gere a senha em: Conta Google → Segurança → Verificação em 2 etapas → Senhas de app</div>
+      <div class="sheet-actions">
+        <button class="pill pill-ghost" onclick="fecharSheet('sheet-email')">Cancelar</button>
+        <button class="pill pill-primary" onclick="salvarEmail()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Banner -->
+<div class="notif-banner" id="notif-banner" style="display:none;">
+  <div class="notif-icon" id="notif-icon">✅</div>
+  <div class="notif-text">
+    <div class="notif-title" id="notif-title"></div>
+    <div class="notif-body"  id="notif-body"></div>
+  </div>
+</div>
+
+<script>
+// ── State ───────────────────────────────────────────────────
+let contasData  = {};
+let logOffset   = 0;
+let editandoId  = null;
+let autoScroll  = true;
+let notifPermission = false;
+
+// ── SW & Notificações ────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js').then(reg => {
+    console.log('SW registrado');
+  });
+}
+
+async function pedirPermissaoNotificacao() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    notifPermission = perm === 'granted';
+  } else {
+    notifPermission = Notification.permission === 'granted';
+  }
+}
+pedirPermissaoNotificacao();
+
+function notificar(titulo, corpo, tipo='sucesso') {
+  // Banner in-app
+  const banner = document.getElementById('notif-banner');
+  document.getElementById('notif-icon').textContent  = tipo === 'sucesso' ? '✅' : tipo === 'erro' ? '❌' : '⚠️';
+  document.getElementById('notif-title').textContent = titulo;
+  document.getElementById('notif-body').textContent  = corpo;
+  banner.style.display = 'flex';
+  setTimeout(() => banner.style.display = 'none', 5000);
+
+  // Push notification nativa (iOS 16.4+ PWA)
+  if (notifPermission && 'Notification' in window) {
+    new Notification(titulo, { body: corpo, icon: '/static/icon.svg' });
+  }
+}
+
+// ── Navigation ───────────────────────────────────────────────
+function mudarPagina(nome, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + nome).classList.add('active');
+  el.classList.add('active');
+  if (nome === 'log') { autoScroll = true; scrollLogToBottom(); }
+}
+
+// ── Polling ──────────────────────────────────────────────────
+let prevStatus = {};
+
+async function pollContas() {
+  try {
+    const r = await fetch('/api/contas');
+    const nova = await r.json();
+
+    // Detecta mudanças de status para notificar
+    Object.entries(nova).forEach(([cid, c]) => {
+      const anterior = prevStatus[cid];
+      if (anterior && anterior !== c.status_tipo && c.status_tipo === 'sucesso') {
+        notificar('🎉 Agendamento confirmado!', c.status, 'sucesso');
+      }
+      if (anterior && anterior !== c.status_tipo && c.status_tipo === 'erro') {
+        notificar('❌ Erro no bot', c.ultimo_log || 'Verifique o log', 'erro');
+      }
+      prevStatus[cid] = c.status_tipo;
+    });
+
+    contasData = nova;
+    renderContas();
+    atualizarNavbar();
+  } catch(e) {}
+}
+
+async function pollLogs() {
+  try {
+    const r = await fetch('/api/logs?desde=' + logOffset);
+    const novos = await r.json();
+    if (novos.length) {
+      logOffset += novos.length;
+      renderLogs(novos);
+    }
+  } catch(e) {}
+}
+
+setInterval(pollContas, 2000);
+setInterval(pollLogs,   1500);
+pollContas();
+pollLogs();
+
+// ── Navbar subtitle ──────────────────────────────────────────
+function atualizarNavbar() {
+  const total   = Object.keys(contasData).length;
+  const ativos  = Object.values(contasData).filter(c => c.rodando).length;
+  const sub     = document.getElementById('nav-subtitle');
+  if (!total)       sub.textContent = 'Nenhuma conta';
+  else if (!ativos) sub.textContent = `${total} conta${total>1?'s':''} · parado`;
+  else              sub.textContent = `${ativos} de ${total} ativo${ativos>1?'s':''}`;
+}
+
+// ── Render Contas ─────────────────────────────────────────────
+const CONSULADO_NOME = {'56':'São Paulo','55':'Rio de Janeiro','54':'Brasília','57':'Recife','128':'Porto Alegre'};
+const TIPO_SP = {parado:'sp-parado', rodando:'sp-rodando', sucesso:'sp-sucesso', erro:'sp-erro', aguardando:'sp-aguardando'};
+
+function renderContas() {
+  const container = document.getElementById('lista-contas');
+  const ids = Object.keys(contasData);
+
+  if (!ids.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🛂</div>
+        <div class="empty-title">Nenhuma conta ainda</div>
+        <div class="empty-desc">Toque em <strong>＋</strong> no canto superior direito para adicionar a primeira conta.</div>
+      </div>`;
+    return;
+  }
+
+  ids.forEach(cid => {
+    const c = contasData[cid];
+    const existing = document.getElementById('card-' + cid);
+
+    if (!existing) {
+      container.insertAdjacentHTML('beforeend', buildCard(cid, c));
+    } else {
+      // Atualiza status pill
+      const sp = existing.querySelector('.status-pill');
+      if (sp) { sp.className = 'status-pill ' + (TIPO_SP[c.status_tipo] || 'sp-parado'); sp.textContent = c.status; }
+      // Atualiza log
+      const logEl = existing.querySelector('.card-log');
+      if (logEl && c.ultimo_log) logEl.textContent = c.ultimo_log;
+      // Atualiza botões
+      const [btnIniciar, btnParar] = existing.querySelectorAll('.btn-acao');
+      if (btnIniciar) { btnIniciar.disabled = c.rodando; btnIniciar.className = `pill btn-small btn-acao ${c.rodando ? 'pill-ghost' : 'pill-primary'}`; }
+      if (btnParar)   { btnParar.disabled   = !c.rodando; btnParar.className  = `pill btn-small btn-acao ${!c.rodando ? 'pill-ghost' : 'pill-danger'}`; }
+    }
+  });
+
+  // Remove cards deletados
+  document.querySelectorAll('[id^="card-"]').forEach(el => {
+    const cid = el.id.replace('card-','');
+    if (!contasData[cid]) el.remove();
+  });
+}
+
+function buildCard(cid, c) {
+  const cfg  = c.config;
+  const nome = cfg.nome || 'Conta';
+  const cons = CONSULADO_NOME[cfg.consulado] || '?';
+  const dmin = cfg.data_minima || '—';
+  const dlim = cfg.data_limite || '—';
+  const spCls = TIPO_SP[c.status_tipo] || 'sp-parado';
+  const rod  = c.rodando;
+
+  return `
+  <div class="account-card" id="card-${cid}">
+    <div class="card-head">
+      <div>
+        <div class="card-name">👤 ${nome}</div>
+        <div class="card-meta">🏛 ${cons}<br>📅 ${dmin} → ${dlim}</div>
+      </div>
+      <span class="status-pill ${spCls} ${rod?'pulsing':''}">${c.status}</span>
+    </div>
+    <div class="card-body">
+      <div class="card-log">${c.ultimo_log || 'Aguardando início...'}</div>
+      <div class="card-btns-main">
+        <button class="pill btn-small btn-acao ${rod ? 'pill-ghost' : 'pill-primary'}" ${rod?'disabled':''} onclick="iniciarConta('${cid}')">▶ Iniciar</button>
+        <button class="pill btn-small btn-acao ${!rod ? 'pill-ghost' : 'pill-danger'}" ${!rod?'disabled':''} onclick="pararConta('${cid}')">⏹ Parar</button>
+      </div>
+      <div class="card-btns-sub">
+        <button class="pill pill-ghost btn-small" onclick="abrirConta('${cid}')">✏️ Editar</button>
+        <button class="pill pill-ghost btn-small" style="color:var(--error);" onclick="deletarConta('${cid}')">🗑 Remover</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Ações ────────────────────────────────────────────────────
+async function iniciarConta(cid) {
+  await fetch('/api/contas/' + cid + '/iniciar', {method:'POST'});
+  pollContas();
+}
+async function pararConta(cid) {
+  await fetch('/api/contas/' + cid + '/parar', {method:'POST'});
+  pollContas();
+}
+async function deletarConta(cid) {
+  if (!confirm('Remover "' + (contasData[cid]?.config?.nome || 'conta') + '"?')) return;
+  await fetch('/api/contas/' + cid, {method:'DELETE'});
+  document.getElementById('card-' + cid)?.remove();
+  delete contasData[cid];
+  atualizarNavbar();
+}
+async function iniciarTodas() {
+  await fetch('/api/iniciar_todas', {method:'POST'});
+  setTimeout(pollContas, 300);
+}
+async function pararTodas() {
+  await fetch('/api/parar_todas', {method:'POST'});
+  setTimeout(pollContas, 300);
+}
+
+// ── Sheet Conta ───────────────────────────────────────────────
+function abrirConta(cid) {
+  editandoId = cid;
+  document.getElementById('sheet-conta-titulo').textContent = cid ? 'Editar Conta' : 'Nova Conta';
+  const ids = ['f-nome','f-email','f-senha','f-schedule','f-group','f-dmin','f-dlim'];
+  ids.forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-intervalo').value  = '120';
+  document.getElementById('f-consulado').value  = '56';
+
+  if (cid && contasData[cid]) {
+    const cfg = contasData[cid].config;
+    document.getElementById('f-nome').value     = cfg.nome || '';
+    document.getElementById('f-email').value    = cfg.site_email || '';
+    document.getElementById('f-schedule').value = cfg.schedule_id || '';
+    document.getElementById('f-group').value    = cfg.group_id || '';
+    document.getElementById('f-consulado').value= cfg.consulado || '56';
+    document.getElementById('f-dmin').value     = cfg.data_minima || '';
+    document.getElementById('f-dlim').value     = cfg.data_limite || '';
+    document.getElementById('f-intervalo').value= cfg.intervalo || '120';
+  }
+  abrirSheet('sheet-conta');
+}
+
+async function salvarConta() {
+  const payload = {
+    nome:        document.getElementById('f-nome').value.trim(),
+    site_email:  document.getElementById('f-email').value.trim(),
+    site_pass:   document.getElementById('f-senha').value,
+    schedule_id: document.getElementById('f-schedule').value.trim(),
+    group_id:    document.getElementById('f-group').value.trim(),
+    consulado:   document.getElementById('f-consulado').value,
+    data_minima: document.getElementById('f-dmin').value,
+    data_limite: document.getElementById('f-dlim').value,
+    intervalo:   document.getElementById('f-intervalo').value || '120',
+  };
+  if (!payload.nome || !payload.site_email || !payload.schedule_id) {
+    alert('Preencha nome, e-mail e Schedule ID.'); return;
+  }
+  if (editandoId) {
+    await fetch('/api/contas/' + editandoId, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+  } else {
+    await fetch('/api/contas', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+  }
+  fecharSheet('sheet-conta');
+  pollContas();
+}
+
+// ── Sheet Email ───────────────────────────────────────────────
+async function abrirEmail() {
+  const r = await fetch('/api/config_email');
+  const cfg = await r.json();
+  document.getElementById('e-notif').checked   = cfg.email_notif;
+  document.getElementById('e-smtp-user').value = cfg.smtp_user || '';
+  document.getElementById('e-smtp-pass').value = '';
+  document.getElementById('e-dest').value      = cfg.email_dest || '';
+  abrirSheet('sheet-email');
+}
+async function salvarEmail() {
+  const payload = {
+    email_notif: document.getElementById('e-notif').checked,
+    smtp_user:   document.getElementById('e-smtp-user').value.trim(),
+    smtp_pass:   document.getElementById('e-smtp-pass').value,
+    email_dest:  document.getElementById('e-dest').value.trim(),
+  };
+  await fetch('/api/config_email', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+  fecharSheet('sheet-email');
+  notificar('Configurações salvas', 'Notificações por email atualizadas.', 'sucesso');
+}
+
+// ── Sheet helpers ─────────────────────────────────────────────
+function abrirSheet(id) { document.getElementById(id).classList.add('open'); }
+function fecharSheet(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.sheet-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ── Log ───────────────────────────────────────────────────────
+function renderLogs(entries) {
+  const c = document.getElementById('log-container');
+  entries.forEach(l => {
+    const div = document.createElement('div');
+    div.className = 'log-entry log-' + l.tipo;
+    div.innerHTML = `<span class="log-ts">${l.ts}</span><span class="log-name">[${l.nome}]</span><span class="log-msg">${l.msg}</span>`;
+    c.appendChild(div);
+  });
+  if (autoScroll) scrollLogToBottom();
+}
+function scrollLogToBottom() {
+  const c = document.getElementById('log-container');
+  c.scrollTop = c.scrollHeight;
+}
+function limparLog() {
+  document.getElementById('log-container').innerHTML = '';
+  logOffset = 0;
+}
+document.getElementById('log-container').addEventListener('scroll', function() {
+  autoScroll = (this.scrollTop + this.clientHeight) >= this.scrollHeight - 30;
+});
+</script>
+</body>
+</html>
